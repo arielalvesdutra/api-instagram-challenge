@@ -18,21 +18,26 @@ public class PostCommentTest {
 
     @Test
     public void gettersAndSetters_shouldWork() {
+        Long id = 1L;
         String text = "Great photo!";
         Post post = new Post();
         User userThatCommented = new User();
         OffsetDateTime date = OffsetDateTime.now();
 
         PostComment postComment = new PostComment()
+                .setId(id)
                 .setText(text)
                 .setPost(post)
                 .setAuthor(userThatCommented)
-                .setCreatedAt(date);
+                .setCreatedAt(date)
+                .setUpdatedAt(date);
 
         assertThat(postComment).isNotNull();
+        assertThat(postComment.getId()).isEqualTo(id);
         assertThat(postComment.getText()).isEqualTo(text);
         assertThat(postComment.getPost()).isEqualTo(post);
         assertThat(postComment.getAuthor()).isEqualTo(userThatCommented);
         assertThat(postComment.getCreatedAt()).isEqualTo(date);
+        assertThat(postComment.getUpdatedAt()).isEqualTo(date);
     }
 }

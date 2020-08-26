@@ -20,6 +20,7 @@ public class UserTest {
 
     @Test
     public void gettersAndSetters_shouldWork() {
+        Long id = 1L;
         String name = "Conan the Barbarian";
         String email = "conan@conan.com";
         String username = "conanofficial";
@@ -32,6 +33,7 @@ public class UserTest {
         Set<Notification> emptyNotificationSet = new HashSet<>();
 
         User user = new User()
+                .setId(id)
                 .setName(name)
                 .setEmail(email)
                 .setUsername(username)
@@ -45,6 +47,7 @@ public class UserTest {
                 .setNotifications(emptyNotificationSet);
 
         assertThat(user).isNotNull();
+        assertThat(user.getId()).isEqualTo(id);
         assertThat(user.isActive()).isEqualTo(active);
         assertThat(user.isSuspense()).isEqualTo(suspense);
         assertThat(user.getName()).isEqualTo(name);
@@ -57,5 +60,24 @@ public class UserTest {
         assertThat(user.getNotifications()).isEqualTo(emptyNotificationSet);
         assertThat(user.getCreatedAt()).isEqualTo(date);
         assertThat(user.getUpdatedAt()).isEqualTo(date);
+    }
+
+    @Test
+    public void equals_shouldBeById() {
+        Long id = 1L;
+
+        User user1 = new User().setId(id);
+        User user2 = new User().setId(id);
+
+        assertThat(user1).isEqualTo(user2);
+    }
+
+    @Test
+    public void decreaseLikeCount_withZeroLikes_shouldNotBeLowerThanZero() {
+        User user = new User();
+
+        user.decreaseLikeCount();
+
+        assertThat(user.getLikesCount()).isEqualTo(0);
     }
 }
