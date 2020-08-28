@@ -49,6 +49,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<!-- Spring Hateoas -->
+		<dependency>
+			<groupId>org.springframework.hateoas</groupId>
+			<artifactId>spring-hateoas</artifactId>
+		</dependency>
 		<!-- H2 Database -->
 		<dependency>
 			<groupId>com.h2database</groupId>

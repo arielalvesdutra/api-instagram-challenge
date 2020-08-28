@@ -1,6 +1,7 @@
 package dev.arielalvesdutra.api_instagram.integration.services;
 
 import dev.arielalvesdutra.api_instagram.entities.User;
+import dev.arielalvesdutra.api_instagram.exceptions.ApiInstagramException;
 import dev.arielalvesdutra.api_instagram.repositories.UserRepository;
 import dev.arielalvesdutra.api_instagram.services.UserService;
 import org.junit.jupiter.api.AfterEach;
@@ -8,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.validation.ConstraintViolationException;
@@ -17,8 +17,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
 public class UserServiceIT {
@@ -109,8 +110,8 @@ public class UserServiceIT {
             userService.create(user2);
             fail("Expecting an exception!");
 
-        } catch (DataIntegrityViolationException e) {
-            assertThat(e.getMessage()).contains("could not execute statement");
+        } catch (ApiInstagramException e) {
+            assertThat(e.getMessage()).contains("Username or e-mail already exists!");
         }
     }
 
@@ -131,8 +132,8 @@ public class UserServiceIT {
             userService.create(user2);
             fail("Expecting an exception!");
 
-        } catch (DataIntegrityViolationException e) {
-            assertThat(e.getMessage()).contains("could not execute statement");
+        } catch (ApiInstagramException e) {
+            assertThat(e.getMessage()).contains("Username or e-mail already exists!");
         }
     }
 
@@ -195,6 +196,92 @@ public class UserServiceIT {
     }
 
     @Test
+    public void findUser_byUsername_shouldWork() {
+        User userToCreate = new User()
+                .setName("Name Lastname")
+                .setEmail("teste1@example.com")
+                .setUsername("teste");
+
+        User createdUser = userService.create(userToCreate);
+        User fetchedUser = userService.findByUsername(createdUser.getUsername());
+
+        assertThat(fetchedUser).isNotNull();
+        assertThat(fetchedUser.getId()).isNotNull();
+        assertThat(fetchedUser.getCreatedAt()).isNotNull();
+        assertThat(fetchedUser.getUpdatedAt()).isNotNull();
+        assertThat(fetchedUser.getName()).isEqualTo(userToCreate.getName());
+        assertThat(fetchedUser.getEmail()).isEqualTo(userToCreate.getEmail());
+        assertThat(fetchedUser.getUsername()).isEqualTo(userToCreate.getUsername());
+        assertThat(fetchedUser.isActive()).isEqualTo(true);
+        assertThat(fetchedUser.isSuspense()).isEqualTo(false);
+        assertThat(fetchedUser.getLikesCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void findUser_byUsernameOrEmail_havingUsername_shouldWork() {
+        User userToCreate = new User()
+                .setName("Name Lastname")
+                .setEmail("teste1@example.com")
+                .setUsername("teste");
+
+        User createdUser = userService.create(userToCreate);
+        User fetchedUser = userService.findByUsernameOrEmail("some", createdUser.getEmail());
+
+        assertThat(fetchedUser).isNotNull();
+        assertThat(fetchedUser.getId()).isNotNull();
+        assertThat(fetchedUser.getCreatedAt()).isNotNull();
+        assertThat(fetchedUser.getUpdatedAt()).isNotNull();
+        assertThat(fetchedUser.getName()).isEqualTo(userToCreate.getName());
+        assertThat(fetchedUser.getEmail()).isEqualTo(userToCreate.getEmail());
+        assertThat(fetchedUser.getUsername()).isEqualTo(userToCreate.getUsername());
+        assertThat(fetchedUser.isActive()).isEqualTo(true);
+        assertThat(fetchedUser.isSuspense()).isEqualTo(false);
+        assertThat(fetchedUser.getLikesCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void findUser_byUsernameOrEmail_havingEmail_shouldWork() {
+        User userToCreate = new User()
+                .setName("Name Lastname")
+                .setEmail("teste1@example.com")
+                .setUsername("teste");
+
+        User createdUser = userService.create(userToCreate);
+        User fetchedUser = userService.findByUsernameOrEmail(createdUser.getUsername(), "some@some.com");
+
+        assertThat(fetchedUser).isNotNull();
+        assertThat(fetchedUser.getId()).isNotNull();
+        assertThat(fetchedUser.getCreatedAt()).isNotNull();
+        assertThat(fetchedUser.getUpdatedAt()).isNotNull();
+        assertThat(fetchedUser.getName()).isEqualTo(userToCreate.getName());
+        assertThat(fetchedUser.getEmail()).isEqualTo(userToCreate.getEmail());
+        assertThat(fetchedUser.getUsername()).isEqualTo(userToCreate.getUsername());
+        assertThat(fetchedUser.isActive()).isEqualTo(true);
+        assertThat(fetchedUser.isSuspense()).isEqualTo(false);
+        assertThat(fetchedUser.getLikesCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void findUser__byUsernameOrEmail_withoutUserOrEmail_shouldThrowAnException() {
+        try {
+            userService.findByUsernameOrEmail("geralt", "some1@some.com");
+            fail("Expecting an exception!");
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("User with username geralt or email some1@some.com not found!");
+        }
+    }
+
+    @Test
+    public void findUser_byUsername_withoutUser_shouldThrowAnException() {
+        try {
+            userService.findByUsername("geralt");
+            fail("Expecting an exception!");
+        } catch (Exception e) {
+            assertThat(e.getMessage()).contains("User with username geralt not found!");
+        }
+    }
+
+    @Test
     public void deleteUser_byId_shouldWork() {
         User userToCreate = new User()
                 .setName("Name Lastname")
@@ -209,9 +296,23 @@ public class UserServiceIT {
         assertThat(fetchedUser.isPresent()).isFalse();
     }
 
+    @Test
+    public void deleteUser_byUsername_shouldWork() {
+        User userToCreate = new User()
+                .setName("Name Lastname")
+                .setEmail("teste1@example.com")
+                .setUsername("teste");
+
+        User createdUser = userService.create(userToCreate);
+        userService.deleteByUsername(createdUser.getUsername());
+        Optional<User> fetchedUser = userRepository.findById(createdUser.getId());
+
+        assertThat(fetchedUser).isNotNull();
+        assertThat(fetchedUser.isPresent()).isFalse();
+    }
 
     @Test
-    public void updateUser_shouldWork() {
+    public void updateUser_byId_shouldWork() {
         User userToCreate = new User()
                 .setName("Name Lastname")
                 .setEmail("teste@example.com")
@@ -220,10 +321,9 @@ public class UserServiceIT {
         String nameToUpdate = "Updated name";
         User userToUpdate = new User()
                 .setName(nameToUpdate)
-                .setActive(false)
-                .setSuspense(true);
+                .setActive(false);
 
-        User updatedUser = userService.update(createdUser.getId(), userToUpdate);
+        User updatedUser = userService.updateById(createdUser.getId(), userToUpdate);
 
         assertThat(updatedUser).isNotNull();
         assertThat(updatedUser.getId()).isNotNull();
@@ -234,7 +334,35 @@ public class UserServiceIT {
         assertThat(fetchedUser.getId()).isNotNull();
         assertThat(fetchedUser.getName()).isEqualTo(nameToUpdate);
         assertThat(fetchedUser.isActive()).isEqualTo(false);
-        assertThat(fetchedUser.isSuspense()).isEqualTo(true);
+        assertThat(fetchedUser.isSuspense()).isEqualTo(false);
+        assertThat(fetchedUser.getCreatedAt()).isEqualTo(createdUser.getCreatedAt());
+        assertThat(fetchedUser.getUpdatedAt()).isNotEqualTo(createdUser.getUpdatedAt());
+    }
+
+    @Test
+    public void updateUser_byUsername_shouldWork() {
+        User userToCreate = new User()
+                .setName("Name Lastname")
+                .setEmail("teste@example.com")
+                .setUsername("teste");
+        User createdUser = userService.create(userToCreate);
+        String nameToUpdate = "Updated name";
+        User userToUpdate = new User()
+                .setName(nameToUpdate)
+                .setActive(false);
+
+        User updatedUser = userService.updateByUsername(createdUser.getUsername(), userToUpdate);
+
+        assertThat(updatedUser).isNotNull();
+        assertThat(updatedUser.getId()).isNotNull();
+
+        User fetchedUser = userRepository.findById(updatedUser.getId()).get();
+
+        assertThat(fetchedUser).isNotNull();
+        assertThat(fetchedUser.getId()).isNotNull();
+        assertThat(fetchedUser.getName()).isEqualTo(nameToUpdate);
+        assertThat(fetchedUser.isActive()).isEqualTo(false);
+        assertThat(fetchedUser.isSuspense()).isEqualTo(false);
         assertThat(fetchedUser.getCreatedAt()).isEqualTo(createdUser.getCreatedAt());
         assertThat(fetchedUser.getUpdatedAt()).isNotEqualTo(createdUser.getUpdatedAt());
     }

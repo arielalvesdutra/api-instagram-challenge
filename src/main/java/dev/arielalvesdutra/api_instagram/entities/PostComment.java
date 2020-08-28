@@ -1,5 +1,6 @@
 package dev.arielalvesdutra.api_instagram.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,8 +22,10 @@ public class PostComment {
     @NotEmpty
     private String text;
 
+    @JsonIgnore
     @ManyToOne
     private Post post;
+    @JsonIgnore
     @ManyToOne
     private User author;
 

@@ -6,6 +6,8 @@ import dev.arielalvesdutra.api_instagram.repositories.PostLikeRepository;
 import dev.arielalvesdutra.api_instagram.repositories.PostRepository;
 import dev.arielalvesdutra.api_instagram.repositories.PostViewRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityNotFoundException;
@@ -73,6 +75,15 @@ public class PostService {
         postCommentRepository.deleteById(postComment.getId());
     }
 
+    public Page<Post> findAllByAuthorUsername(Pageable pageable, String username) {
+        return postRepository.findAllByAuthor_username(pageable, username);
+    }
+
+    public Page<PostComment> findAllPostCommentsByPostId(Pageable pageable, Long id) {
+        Post post = findById(id);
+        return postCommentRepository.findAllByPost_id(pageable, post.getId());
+    }
+
     public Post findById(Long id) {
         return postRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Post with id " + id + " not found!"));
@@ -95,12 +106,16 @@ public class PostService {
         return postLikeRepository.findAllByPost_id(id);
     }
 
+    public Page<PostLike> findPostLikesByPostId(Pageable pagination, Long id) {
+        return postLikeRepository.findAllByPost_id(pagination, id);
+    }
+
     public List<PostView> findPostViewsByPostId(Long id) {
         return postViewRepository.findAllByPost_id(id);
     }
 
     @Transactional
-    public void toggleLike(Long postId, Long userId) {
+    public String toggleLike(Long postId, Long userId) {
         Post post = findById(postId);
         User user = userService.findById(userId);
         PostLike postLike = findPostLikeByPostIdAndUserId(post.getId(), user.getId());
@@ -112,13 +127,14 @@ public class PostService {
             post.setUpdatedAt(updatedAt);
             user.increaseLikeCount();
             user.setUpdatedAt(updatedAt);
-            return;
+            return "Like added with success!";
         }
 
         post.removeLike(postLike);
         post.setUpdatedAt(OffsetDateTime.now());
         user.decreaseLikeCount();
         user.setUpdatedAt(updatedAt);
+        return "Like removed with success!";
     }
 
     @Transactional

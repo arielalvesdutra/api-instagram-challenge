@@ -18,17 +18,17 @@ public class Notification {
     @Getter @Setter @Accessors(chain = true)
     private String title;
     @Getter @Accessors(chain = true)
-    private boolean read;
+    private boolean opened;
     @Getter @Setter @Accessors(chain = true)
     private OffsetDateTime createdAt = OffsetDateTime.now();
     @Getter @Setter @Accessors(chain = true)
-    private OffsetDateTime readAt;
+    private OffsetDateTime openedAt;
 
-    public Notification setRead(boolean read) {
-        this.read = read;
+    public Notification setOpened(boolean opened) {
+        this.opened = opened;
 
-        if (read && readAt == null) {
-            readAt = OffsetDateTime.now();
+        if (opened && openedAt == null) {
+            openedAt = OffsetDateTime.now();
         }
 
         return this;
