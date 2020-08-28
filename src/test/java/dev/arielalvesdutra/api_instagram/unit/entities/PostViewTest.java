@@ -18,16 +18,19 @@ public class PostViewTest {
 
     @Test
     public void gettersAndSetters_shouldWork() {
+        Long id = 1L;
         Post post = new Post();
         User userThatSawThePost = new User();
         OffsetDateTime date = OffsetDateTime.now();
 
         PostView postView = new PostView()
+                .setId(id)
                 .setPost(post)
                 .setUser(userThatSawThePost)
                 .setCreatedAt(date);
 
         assertThat(postView).isNotNull();
+        assertThat(postView.getId()).isEqualTo(id);
         assertThat(postView.getPost()).isEqualTo(post);
         assertThat(postView.getUser()).isEqualTo(userThatSawThePost);
         assertThat(postView.getCreatedAt()).isEqualTo(date);

@@ -18,16 +18,19 @@ public class PostLikeTest {
 
     @Test
     public void gettersAndSetters_shouldWork() {
+        Long id = 1L;
         Post post = new Post();
         User userThatLiked = new User();
         OffsetDateTime date = OffsetDateTime.now();
 
         PostLike postLike = new PostLike()
+                .setId(id)
                 .setPost(post)
                 .setUser(userThatLiked)
                 .setCreatedAt(date);
 
         assertThat(postLike).isNotNull();
+        assertThat(postLike.getId()).isEqualTo(id);
         assertThat(postLike.getPost()).isEqualTo(post);
         assertThat(postLike.getUser()).isEqualTo(userThatLiked);
         assertThat(postLike.getCreatedAt()).isEqualTo(date);
