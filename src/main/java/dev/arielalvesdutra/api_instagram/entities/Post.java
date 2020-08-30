@@ -1,8 +1,10 @@
 package dev.arielalvesdutra.api_instagram.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 
 import javax.persistence.*;
@@ -17,11 +19,13 @@ import java.util.Set;
 @Accessors(chain = true)
 @Entity
 @EqualsAndHashCode(of = "id")
+@ToString
 public class Post {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
+    @ManyToOne
     private User author;
     @NotEmpty
     private String text;
@@ -34,10 +38,13 @@ public class Post {
     private Integer likesCount = 0;
     private Integer viewsCount = 0;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PostLike> likes = new HashSet<>();
+    @JsonIgnore
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PostView> views = new HashSet<>();
+    @JsonIgnore
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<PostComment> comments = new HashSet<>();
 

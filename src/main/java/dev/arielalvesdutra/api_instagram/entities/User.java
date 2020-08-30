@@ -1,5 +1,6 @@
 package dev.arielalvesdutra.api_instagram.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,22 +37,30 @@ public class User implements Serializable {
 
     private Integer likesCount = 0;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_blocked_users",
             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             joinColumns = @JoinColumn(name = "blocked_user_id", referencedColumnName = "id"))
     private Set<User> blockedUsers = new HashSet<>();
+    @JsonIgnore
     @ManyToMany
     private Set<User> following = new HashSet<>();
+    @JsonIgnore
     @ManyToMany
     private Set<User> followers = new HashSet<>();
+    @JsonIgnore
     @ManyToMany
     @JoinTable(name = "user_postbookmark",
             inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"),
             joinColumns = @JoinColumn(name = "post_id", referencedColumnName = "id"))
     private Set<Post> postBookmarks = new HashSet<>();
+    @JsonIgnore
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Notification> notifications = new HashSet<>();
+    @JsonIgnore
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Post> posts = new HashSet<>();
 
     private boolean active = true;
     private boolean suspense = false;

@@ -32,25 +32,25 @@ public class NotificationTest {
         assertThat(notification.getId()).isEqualTo(id);
         assertThat(notification.getTitle()).isEqualTo(title);
         assertThat(notification.getCreatedAt()).isEqualTo(date);
-        assertThat(notification.getReadAt()).isNull();
-        assertThat(notification.isRead()).isEqualTo(read);
+        assertThat(notification.getOpenedAt()).isNull();
+        assertThat(notification.isOpened()).isEqualTo(read);
     }
 
     @Test
     public void setRead_withTrue_shouldSetReadAt() {
         Notification notification = new Notification();
 
-        notification.setRead(true);
+        notification.setOpened(true);
 
-        assertThat(notification.getReadAt()).isNotNull();
+        assertThat(notification.getOpenedAt()).isNotNull();
     }
 
     @Test
     public void setRead_withFalse_shouldNotSetReadAt() {
         Notification notification = new Notification();
 
-        notification.setRead(false);
+        notification.setOpened(false);
 
-        assertThat(notification.getReadAt()).isNull();
+        assertThat(notification.getOpenedAt()).isNull();
     }
 }

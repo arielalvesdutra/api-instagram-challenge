@@ -1,6 +1,7 @@
 package dev.arielalvesdutra.api_instagram.integration.services;
 
 import dev.arielalvesdutra.api_instagram.entities.*;
+import dev.arielalvesdutra.api_instagram.factories.entities.PostFactory;
 import dev.arielalvesdutra.api_instagram.factories.entities.UserFactory;
 import dev.arielalvesdutra.api_instagram.repositories.PostRepository;
 import dev.arielalvesdutra.api_instagram.repositories.UserRepository;
@@ -11,6 +12,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.TransactionSystemException;
 
@@ -21,8 +26,9 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@SpringBootTest(webEnvironment = RANDOM_PORT)
 @AutoConfigureTestDatabase
 @ActiveProfiles("test")
 public class PostServiceIT {
@@ -87,8 +93,8 @@ public class PostServiceIT {
     public void createPost_shouldWork() {
         User author = userService.create(UserFactory.toPersist());
         Post post = new Post()
-                .setText("Always coffee! :)")
                 .setAuthor(author)
+                .setText("Always coffee! :)")
                 .setPhotoUrl("https://somesite");
 
         Post createdPost = postService.create(post);
@@ -127,14 +133,29 @@ public class PostServiceIT {
     }
 
     @Test
+    public void findAllPosts_byAuthorUsername_shouldReturnPostsPage() {
+        User author = userService.create(UserFactory.toPersist());
+        Post post = PostFactory.toPersist(author);
+        Post createdPost = postService.create(post);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id"));
+
+        Page<Post> postPage = postService.findAllByAuthorUsername(pageable, author.getUsername());
+
+        assertThat(postPage).isNotNull();
+
+        List<Post> postList = postPage.getContent();
+
+        assertThat(postList).isNotNull();
+        assertThat(postList.size()).isEqualTo(1);
+        assertThat(postList).contains(createdPost);
+    }
+
+    @Test
     public void findPost_byId_shouldWork() {
         User author = userService.create(UserFactory.toPersist());
-        Post post = new Post()
-                .setText("Always coffee! :)")
-                .setAuthor(author)
-                .setPhotoUrl("https://somesite");
-
+        Post post = PostFactory.toPersist(author);
         Post createdPost = postService.create(post);
+
         Post fetchedPost = postService.findById(createdPost.getId());
 
         assertThat(fetchedPost.getText()).isEqualTo(post.getText());
@@ -144,6 +165,33 @@ public class PostServiceIT {
         assertThat(fetchedPost.getViewsCount()).isEqualTo(0);
         assertThat(fetchedPost.getCreatedAt()).isNotNull();
         assertThat(fetchedPost.getUpdatedAt()).isNotNull();
+    }
+
+    @Test
+    public void findPostLikes_byIdAndPageable_shouldReturnPostLikePage() {
+        User author = userService.create(UserFactory.toPersist());
+        User userThatWillLike = userService.create(UserFactory.toPersistSecondOption());
+        Post createdPost = postService.create(PostFactory.toPersist(author));
+        postService.toggleLike(createdPost.getId(), userThatWillLike.getId());
+        Pageable pageable = PageRequest.of(0, 10, Sort.by("id"));
+
+
+        Page<PostLike> postLikePage = postService.findPostLikesByPostId(pageable, createdPost.getId());
+
+        assertThat(postLikePage).isNotNull();
+        assertThat(postLikePage.getContent()).isNotNull();
+
+        List<PostLike> postLikeList = postLikePage.getContent();
+
+        assertThat(postLikeList).isNotEmpty();
+
+        PostLike postLike = postLikeList.get(0);
+
+        assertThat(postLike).isNotNull();
+        assertThat(postLike.getCreatedAt()).isNotNull();
+        assertThat(postLike.getId()).isNotNull();
+        assertThat(postLike.getUser()).isEqualTo(userThatWillLike);
+        assertThat(postLike.getPost()).isEqualTo(createdPost);
     }
 
     @Test
